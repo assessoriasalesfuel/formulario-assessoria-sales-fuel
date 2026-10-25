@@ -2,24 +2,75 @@
 // PERGUNTAS
 // Adicione, remova ou troque perguntas nesta lista.
 // - id: nome EXATO do campo na Bolten (ex.: "Nome", "E-mail"); se não bater, a Bolten ignora
-// - tipo: "texto", "whatsapp", "email" ou "escolha"
+// - tipo: "texto", "whatsapp", "email", "escolha" (uma resposta) ou "multipla" (várias respostas)
 // - pergunta: texto mostrado na tela
-// - opcoes: só para o tipo "escolha" (lista de botões)
+// - opcoes: só para os tipos "escolha" e "multipla" (lista de botões)
+// Os ids "faturamento" e "verba" são usados na qualificação (server.js).
 // =====================================================================
 const PERGUNTAS = [
-  { id: "Nome", tipo: "texto", pergunta: "Qual é o seu nome?" },
+  { id: "Nome", tipo: "texto", pergunta: "Qual seu nome?" },
   { id: "Telefone", tipo: "whatsapp", pergunta: "Qual é o seu WhatsApp?" },
-  { id: "E-mail", tipo: "email", pergunta: "Qual é o seu e-mail?" },
-  // Exemplo de múltipla escolha:
-  // { id: "faturamento", tipo: "escolha", pergunta: "Qual é o seu faturamento mensal?", opcoes: ["Até R$ 50 mil", "De R$ 50 mil a R$ 200 mil", "Acima de R$ 200 mil"] },
+  { id: "E-mail", tipo: "email", pergunta: "Qual é o seu melhor e-mail?" },
+  { id: "empresa", tipo: "texto", pergunta: "Qual é o nome da sua empresa e o que ela vende?" },
+  {
+    id: "faturamento",
+    tipo: "escolha",
+    pergunta: "Qual a média de faturamento mensal da sua empresa?",
+    opcoes: [
+      "Menos de R$ 10 mil",
+      "De R$ 10 mil a R$ 30 mil",
+      "Mais de R$ 30 mil até R$ 60 mil",
+      "Mais de R$ 60 mil até R$ 100 mil",
+      "Mais de R$ 100 mil",
+    ],
+  },
+  {
+    id: "origem_clientes",
+    tipo: "multipla",
+    pergunta: "Hoje, como os seus clientes chegam até você?",
+    opcoes: [
+      "Por indicação de outras pessoas",
+      "Pelo Instagram, Facebook ou outras redes",
+      "Por anúncios pagos",
+      "Chegam sozinhos, depende do movimento",
+      "De outro jeito",
+    ],
+  },
+  {
+    id: "dificuldade",
+    tipo: "escolha",
+    pergunta: "O que mais atrapalha você a vender mais hoje?",
+    opcoes: [
+      "Entram poucos clientes",
+      "Chegam clientes, mas poucos compram",
+      "Uma hora vende bem, outra hora cai",
+      "Já tentei anúncios e não deu certo",
+      "Quero anunciar, mas não sei por onde começar",
+      "Outro motivo",
+    ],
+  },
+  {
+    id: "verba",
+    tipo: "escolha",
+    pergunta: "Qual valor você consegue reservar por mês para marketing?",
+    opcoes: [
+      "Menos de R$ 1.200",
+      "De R$ 1.200 a R$ 2.000",
+      "Mais de R$ 2.000 até R$ 3.000",
+      "Mais de R$ 3.000 até R$ 4.000",
+      "Mais de R$ 4.000",
+      "Ainda não sei",
+    ],
+  },
 ];
 
-// Textos da abertura e do agradecimento
+// Textos da abertura e da tela final
 const TEXTOS = {
   titulo: "Vamos conversar sobre o seu negócio",
   subtitulo: "Leva menos de 1 minuto.",
-  agradecimentoTitulo: "Obrigado!",
-  agradecimentoTexto: "Recebemos suas informações e entraremos em contato em breve.",
+  finalQualificado: "Tudo certo! Recebemos suas respostas e vamos entrar em contato pelo seu WhatsApp em breve.",
+  finalNaoQualificado:
+    "Obrigado pelas respostas! Pelo que você nos contou, este ainda não é o momento ideal para trabalharmos juntos.",
 };
 
 // =====================================================================
@@ -103,8 +154,66 @@ function mostrarPergunta(indice) {
     return;
   }
 
+  if (p.tipo === "multipla") {
+    const marcadas = new Set(respostas[p.id] || []);
+    const opcoes = p.opcoes
+      .map((opcao) => {
+        const classe = marcadas.has(opcao) ? "opcao selecionada" : "opcao";
+        return `<button type="button" class="${classe}">${escapar(opcao)}</button>`;
+      })
+      .join("");
+
+    mostrar(
+      `${cabecalho}
+       <form id="form" novalidate>
+         <div class="opcoes">${opcoes}</div>
+         <p class="erro" id="erro"></p>
+         <button type="submit" class="botao">Continuar</button>
+       </form>
+       ${voltar}`,
+      () => {
+        const form = document.getElementById("form");
+        const erro = document.getElementById("erro");
+        const botoes = tela.querySelectorAll(".opcao");
+
+        botoes.forEach((botao, i) => {
+          // Clique (ou espaço) marca/desmarca
+          botao.addEventListener("click", () => {
+            const opcao = p.opcoes[i];
+            if (marcadas.has(opcao)) marcadas.delete(opcao);
+            else marcadas.add(opcao);
+            botao.classList.toggle("selecionada");
+            erro.textContent = "";
+          });
+          // Enter avança
+          botao.addEventListener("keydown", (e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              form.requestSubmit();
+            }
+          });
+        });
+
+        form.addEventListener("submit", (e) => {
+          e.preventDefault();
+          if (marcadas.size === 0) {
+            erro.textContent = "Escolha pelo menos uma opção.";
+            return;
+          }
+          // Mantém a ordem da lista de opções
+          respostas[p.id] = p.opcoes.filter((opcao) => marcadas.has(opcao));
+          avancar();
+        });
+
+        document.getElementById("voltar").addEventListener("click", voltarTela);
+        botoes[0].focus();
+      }
+    );
+    return;
+  }
+
   const atributos = {
-    texto: 'type="text" autocomplete="name"',
+    texto: p.id === "Nome" ? 'type="text" autocomplete="name"' : 'type="text"',
     whatsapp: 'type="tel" inputmode="numeric" autocomplete="tel" placeholder="(99) 99999-9999"',
     email: 'type="email" inputmode="email" autocomplete="email" placeholder="nome@exemplo.com"',
   }[p.tipo];
@@ -201,24 +310,26 @@ async function enviar() {
   atualizarProgresso(1);
   mostrar(`<h2>Enviando...</h2>`);
 
+  // Envia cada resposta junto com o texto da pergunta, na ordem da lista
+  const dados = PERGUNTAS.map((p) => ({ id: p.id, pergunta: p.pergunta, resposta: respostas[p.id] }));
+
   try {
     const resposta = await fetch("/api/lead", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(respostas),
+      body: JSON.stringify({ respostas: dados }),
     });
     if (!resposta.ok) throw new Error("Falha no envio");
-    mostrarAgradecimento();
+    const resultado = await resposta.json();
+    mostrarFinal(resultado.qualificado);
   } catch (e) {
     mostrarFalha();
   }
 }
 
-function mostrarAgradecimento() {
-  mostrar(
-    `<h1>${escapar(TEXTOS.agradecimentoTitulo)}</h1>
-     <p class="subtitulo">${escapar(TEXTOS.agradecimentoTexto)}</p>`
-  );
+function mostrarFinal(qualificado) {
+  const texto = qualificado ? TEXTOS.finalQualificado : TEXTOS.finalNaoQualificado;
+  mostrar(`<h2>${escapar(texto)}</h2>`);
 }
 
 function mostrarFalha() {

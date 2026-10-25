@@ -39,19 +39,40 @@ function chamarBolten(metodo, caminho, corpo) {
   return chamada;
 }
 
+// Qualificação: o lead é NÃO QUALIFICADO se responder alguma destas opções.
+const DESQUALIFICA = {
+  faturamento: "Menos de R$ 10 mil",
+  verba: "Menos de R$ 1.200",
+};
+
 // Recebe o lead e cria contato + oportunidade na Bolten.
-// As respostas vão para os dois; a Bolten guarda só os campos com o mesmo nome.
-// A oportunidade entra na etapa definida em BOLTEN_ETAPA.
+// O contato recebe Nome, Telefone e E-mail. A oportunidade entra na etapa
+// definida em BOLTEN_ETAPA, com a qualificação e todas as respostas na Observação.
 app.post("/api/lead", async (req, res) => {
-  const respostas = req.body;
-  console.log("Novo lead recebido:", respostas);
+  const lista = req.body.respostas;
+  if (!Array.isArray(lista)) {
+    return res.status(400).json({ ok: false });
+  }
+  console.log("Novo lead recebido:", lista);
+
+  // Respostas de várias opções viram texto separado por vírgula
+  const respostas = {};
+  for (const item of lista) {
+    respostas[item.id] = Array.isArray(item.resposta) ? item.resposta.join(", ") : item.resposta;
+  }
+
+  const qualificado = !Object.keys(DESQUALIFICA).some((id) => respostas[id] === DESQUALIFICA[id]);
+  const observacao = [
+    qualificado ? "QUALIFICADO" : "NÃO QUALIFICADO",
+    ...lista.map((item) => `${item.pergunta}: ${respostas[item.id]}`),
+  ].join("\n");
 
   try {
     const contato = await chamarBolten("POST", `/contact/api/v1/${BOLTEN_CONTATOS_ID}/contacts`, {
-      attributes: respostas,
+      attributes: { Nome: respostas["Nome"], Telefone: respostas["Telefone"], "E-mail": respostas["E-mail"] },
     });
     const oportunidade = await chamarBolten("POST", `/kanban/api/v1/${BOLTEN_FUNIL_ID}/opportunities`, {
-      attributes: { ...respostas, Status: BOLTEN_ETAPA },
+      attributes: { Status: BOLTEN_ETAPA, Observação: observacao },
     });
     await chamarBolten(
       "POST",
@@ -60,7 +81,7 @@ app.post("/api/lead", async (req, res) => {
     );
 
     console.log(`Lead salvo na Bolten. Contato: ${contato.id} | Oportunidade: ${oportunidade.id}`);
-    res.json({ ok: true });
+    res.json({ ok: true, qualificado });
   } catch (erro) {
     console.error("Erro ao salvar na Bolten:", erro.message);
     res.status(502).json({ ok: false });
