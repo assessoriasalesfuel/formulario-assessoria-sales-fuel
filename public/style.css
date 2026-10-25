@@ -337,16 +337,30 @@ h2 {
   transform: scale(0.98);
 }
 
+/* Mesmo formato do "Continuar", mas com fundo azul claro */
 .voltar {
   display: block;
-  margin: 16px auto 0;
-  padding: 8px;
-  font-size: 1rem;
+  width: 100%;
+  margin-top: 12px;
+  padding: 18px;
+  font-size: 1.1rem;
+  font-weight: 600;
   font-family: inherit;
-  color: var(--cor-texto-secundario);
-  background: none;
+  color: var(--cor-principal);
+  background: var(--cor-selecionada-fundo);
   border: none;
+  border-radius: 14px;
   cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.2s ease, transform 0.1s ease;
+}
+
+.voltar:focus {
+  outline: none;
+}
+
+.voltar:active {
+  transform: scale(0.98);
 }
 
 /* Efeitos de passar o mouse: só em aparelhos com mouse (no celular ficariam "presos") */
@@ -360,7 +374,7 @@ h2 {
   }
 
   .voltar:hover {
-    color: var(--cor-texto);
+    background: color-mix(in srgb, var(--cor-principal) 14%, var(--cor-cartao));
   }
 }
 
