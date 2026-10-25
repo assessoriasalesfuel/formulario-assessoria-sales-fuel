@@ -1,0 +1,13 @@
+{
+  "name": "formulario-assessoria-sales-fuel",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Formulário de qualificação de leads",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}

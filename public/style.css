@@ -1,0 +1,200 @@
+/* ===== Cores (troque aqui) ===== */
+:root {
+  --cor-principal: #2563eb;
+  --cor-principal-hover: #1d4ed8;
+  --cor-fundo: #f8fafc;
+  --cor-campo: #ffffff;
+  --cor-texto: #0f172a;
+  --cor-texto-secundario: #64748b;
+  --cor-borda: #cbd5e1;
+  --cor-erro: #dc2626;
+}
+
+/* ===== Base ===== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== Barra de progresso ===== */
+.progresso {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  background: var(--cor-borda);
+}
+
+.progresso-barra {
+  height: 100%;
+  width: 0;
+  background: var(--cor-principal);
+  transition: width 0.4s ease;
+}
+
+/* ===== Layout ===== */
+main {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+}
+
+.tela {
+  width: 100%;
+  max-width: 560px;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.tela.oculta {
+  opacity: 0;
+  transform: translateY(16px);
+}
+
+/* ===== Textos ===== */
+.contador {
+  color: var(--cor-texto-secundario);
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+h1 {
+  font-size: 2rem;
+  line-height: 1.25;
+  margin-bottom: 12px;
+}
+
+h2 {
+  font-size: 1.6rem;
+  line-height: 1.3;
+  margin-bottom: 24px;
+}
+
+.subtitulo {
+  color: var(--cor-texto-secundario);
+  font-size: 1.15rem;
+  margin-bottom: 32px;
+}
+
+/* ===== Campo ===== */
+.campo {
+  width: 100%;
+  padding: 16px;
+  font-size: 1.25rem;
+  font-family: inherit;
+  color: var(--cor-texto);
+  background: var(--cor-campo);
+  border: 2px solid var(--cor-borda);
+  border-radius: 10px;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+
+.campo:focus {
+  border-color: var(--cor-principal);
+}
+
+.campo.invalido {
+  border-color: var(--cor-erro);
+}
+
+.erro {
+  color: var(--cor-erro);
+  font-size: 1rem;
+  min-height: 1.5em;
+  margin-top: 8px;
+}
+
+/* ===== Múltipla escolha ===== */
+.opcoes {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.opcao {
+  width: 100%;
+  padding: 16px;
+  font-size: 1.15rem;
+  font-family: inherit;
+  text-align: left;
+  color: var(--cor-texto);
+  background: var(--cor-campo);
+  border: 2px solid var(--cor-borda);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.opcao:hover,
+.opcao:focus {
+  border-color: var(--cor-principal);
+  outline: none;
+}
+
+.opcao.selecionada {
+  border-color: var(--cor-principal);
+  color: var(--cor-principal);
+  font-weight: 600;
+}
+
+/* ===== Botões ===== */
+.botao {
+  width: 100%;
+  margin-top: 16px;
+  padding: 16px;
+  font-size: 1.15rem;
+  font-weight: 600;
+  font-family: inherit;
+  color: #ffffff;
+  background: var(--cor-principal);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.botao:hover,
+.botao:focus {
+  background: var(--cor-principal-hover);
+  outline: none;
+}
+
+.voltar {
+  display: block;
+  margin: 20px auto 0;
+  padding: 8px;
+  font-size: 1rem;
+  font-family: inherit;
+  color: var(--cor-texto-secundario);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.voltar:hover {
+  color: var(--cor-texto);
+}
+
+/* ===== Telas maiores ===== */
+@media (min-width: 600px) {
+  h1 {
+    font-size: 2.5rem;
+  }
+
+  h2 {
+    font-size: 1.9rem;
+  }
+}
