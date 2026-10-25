@@ -148,7 +148,7 @@ function mostrarPergunta(indice) {
           avancar();
         });
       });
-      (tela.querySelector(".opcao.selecionada") || botoes[0]).focus();
+      // Sem foco automático: nenhuma opção aparece destacada antes do clique
       document.getElementById("voltar").addEventListener("click", voltarTela);
     });
     return;
@@ -158,7 +158,7 @@ function mostrarPergunta(indice) {
     const marcadas = new Set(respostas[p.id] || []);
     const opcoes = p.opcoes
       .map((opcao) => {
-        const classe = marcadas.has(opcao) ? "opcao selecionada" : "opcao";
+        const classe = marcadas.has(opcao) ? "opcao marcavel selecionada" : "opcao marcavel";
         return `<button type="button" class="${classe}">${escapar(opcao)}</button>`;
       })
       .join("");
@@ -206,7 +206,6 @@ function mostrarPergunta(indice) {
         });
 
         document.getElementById("voltar").addEventListener("click", voltarTela);
-        botoes[0].focus();
       }
     );
     return;
@@ -346,5 +345,14 @@ function mostrarFalha() {
     }
   );
 }
+
+// Enter avança mesmo sem nenhum campo ou opção selecionado (ex.: pergunta de várias respostas)
+document.addEventListener("keydown", (e) => {
+  const form = document.getElementById("form");
+  if (e.key === "Enter" && form && document.activeElement === document.body) {
+    e.preventDefault();
+    form.requestSubmit();
+  }
+});
 
 mostrarAbertura();

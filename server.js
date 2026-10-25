@@ -45,10 +45,50 @@ const DESQUALIFICA = {
   verba: "Menos de R$ 1.200",
 };
 
-// Recebe o lead e cria contato + oportunidade na Bolten.
+// Se a Bolten der erro, cada etapa é tentada de novo depois destas esperas (5 tentativas no total).
+const ESPERAS_MS = [5000, 30000, 120000, 300000];
+
+async function comTentativas(descricao, funcao) {
+  for (let tentativa = 1; ; tentativa++) {
+    try {
+      return await funcao();
+    } catch (erro) {
+      const total = ESPERAS_MS.length + 1;
+      console.error(`Falha ao ${descricao} (tentativa ${tentativa} de ${total}): ${erro.message}`);
+      if (tentativa === total) throw erro;
+      await new Promise((r) => setTimeout(r, ESPERAS_MS[tentativa - 1]));
+    }
+  }
+}
+
+// Cria contato + oportunidade na Bolten e associa os dois.
 // O contato recebe Nome, Telefone e E-mail. A oportunidade entra na etapa
 // definida em BOLTEN_ETAPA, com a qualificação e todas as respostas na Observação.
-app.post("/api/lead", async (req, res) => {
+// Cada etapa tem suas próprias tentativas, então nada é criado em dobro.
+// "progresso" guarda o que já foi criado, para o aviso de erro.
+async function salvarNaBolten(respostas, observacao, progresso) {
+  const contato = await comTentativas("criar o contato", () =>
+    chamarBolten("POST", `/contact/api/v1/${BOLTEN_CONTATOS_ID}/contacts`, {
+      attributes: { Nome: respostas["Nome"], Telefone: respostas["Telefone"], "E-mail": respostas["E-mail"] },
+    })
+  );
+  progresso.contato = contato.id;
+  const oportunidade = await comTentativas("criar a oportunidade", () =>
+    chamarBolten("POST", `/kanban/api/v1/${BOLTEN_FUNIL_ID}/opportunities`, {
+      attributes: { Status: BOLTEN_ETAPA, Observação: observacao },
+    })
+  );
+  progresso.oportunidade = oportunidade.id;
+  await comTentativas("associar o contato à oportunidade", () =>
+    chamarBolten("POST", `/kanban/api/v1/${BOLTEN_FUNIL_ID}/opportunities/${oportunidade.id}/contact`, {
+      id: contato.id,
+    })
+  );
+  console.log(`Lead salvo na Bolten. Contato: ${contato.id} | Oportunidade: ${oportunidade.id}`);
+}
+
+// Recebe o lead, responde na hora com a qualificação e salva na Bolten por trás.
+app.post("/api/lead", (req, res) => {
   const lista = req.body.respostas;
   if (!Array.isArray(lista)) {
     return res.status(400).json({ ok: false });
@@ -67,25 +107,18 @@ app.post("/api/lead", async (req, res) => {
     ...lista.map((item) => `${item.pergunta}: ${respostas[item.id]}`),
   ].join("\n");
 
-  try {
-    const contato = await chamarBolten("POST", `/contact/api/v1/${BOLTEN_CONTATOS_ID}/contacts`, {
-      attributes: { Nome: respostas["Nome"], Telefone: respostas["Telefone"], "E-mail": respostas["E-mail"] },
-    });
-    const oportunidade = await chamarBolten("POST", `/kanban/api/v1/${BOLTEN_FUNIL_ID}/opportunities`, {
-      attributes: { Status: BOLTEN_ETAPA, Observação: observacao },
-    });
-    await chamarBolten(
-      "POST",
-      `/kanban/api/v1/${BOLTEN_FUNIL_ID}/opportunities/${oportunidade.id}/contact`,
-      { id: contato.id }
-    );
+  res.json({ ok: true, qualificado });
 
-    console.log(`Lead salvo na Bolten. Contato: ${contato.id} | Oportunidade: ${oportunidade.id}`);
-    res.json({ ok: true, qualificado });
-  } catch (erro) {
-    console.error("Erro ao salvar na Bolten:", erro.message);
-    res.status(502).json({ ok: false });
-  }
+  const progresso = {};
+  salvarNaBolten(respostas, observacao, progresso).catch(() => {
+    // Esgotou as tentativas: deixa tudo no terminal para cadastrar à mão
+    const jaCriado = [
+      progresso.contato && `contato ${progresso.contato}`,
+      progresso.oportunidade && `oportunidade ${progresso.oportunidade}`,
+    ].filter(Boolean);
+    const aviso = jaCriado.length ? ` (já criado na Bolten: ${jaCriado.join(", ")})` : "";
+    console.error(`LEAD NÃO SALVO NA BOLTEN${aviso}. Cadastre à mão:\n${observacao}`);
+  });
 });
 
 app.listen(PORTA, () => {
