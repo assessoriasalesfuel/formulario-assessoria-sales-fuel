@@ -119,7 +119,10 @@ function mostrarAbertura() {
      <button class="botao" id="comecar">${escapar(TEXTOS.botaoComecar)}</button>`,
     () => {
       const botao = document.getElementById("comecar");
-      botao.addEventListener("click", () => mostrarPergunta(0));
+      botao.addEventListener("click", () => {
+        fbq("trackCustom", "IniciouFormulario");
+        mostrarPergunta(0);
+      });
       botao.focus();
     }
   );
@@ -308,6 +311,34 @@ function limparErro(campo) {
   document.getElementById("erro").textContent = "";
 }
 
+// ----- Pixel da Meta -----
+const PIXEL_ID = "1334903205155707";
+let leadRegistrado = false;
+
+// Dispara "Lead" (e "LeadQualificado") uma vez só por visita, mesmo com clique duplo ou página
+// atualizada. Ao fechar e abrir de novo, conta de novo (sessionStorage).
+function registrarLeadNoPixel(qualificado) {
+  try {
+    if (sessionStorage.getItem("leadRegistrado")) leadRegistrado = true;
+  } catch (e) {}
+  if (leadRegistrado) return;
+  leadRegistrado = true;
+  try {
+    sessionStorage.setItem("leadRegistrado", "1");
+  } catch (e) {}
+
+  // Correspondência avançada manual: o pixel protege (hash) os dados antes de enviar
+  const telefone = (respostas["Telefone"] || "").replace(/\D/g, "");
+  fbq("init", PIXEL_ID, {
+    em: (respostas["E-mail"] || "").trim().toLowerCase(),
+    ph: telefone ? "55" + telefone : "",
+    fn: (respostas["Nome"] || "").trim().split(/\s+/)[0].toLowerCase(),
+  });
+
+  fbq("track", "Lead");
+  if (qualificado) fbq("trackCustom", "LeadQualificado");
+}
+
 // ----- Envio -----
 async function enviar() {
   atualizarProgresso(1);
@@ -324,6 +355,7 @@ async function enviar() {
     });
     if (!resposta.ok) throw new Error("Falha no envio");
     const resultado = await resposta.json();
+    registrarLeadNoPixel(resultado.qualificado);
     mostrarFinal(resultado.qualificado);
   } catch (e) {
     mostrarFalha();
