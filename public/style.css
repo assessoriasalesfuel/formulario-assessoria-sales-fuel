@@ -10,6 +10,10 @@
   --cor-borda: #d5def0;
   --cor-selecionada-fundo: #eef3ff;
   --cor-erro: #dc2626;
+
+  /* Fontes (Google Fonts, carregadas no index.html) */
+  --fonte-titulo: "Sora", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --fonte-texto: "Inter", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
 }
 
 /* ===== Base ===== */
@@ -22,9 +26,27 @@
 body {
   background: var(--cor-fundo);
   color: var(--cor-texto);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-family: var(--fonte-texto);
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
+}
+
+/* Brilho suave azul e ciano no fundo */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 0% 0%, color-mix(in srgb, var(--cor-principal) 16%, transparent), transparent 55%),
+    radial-gradient(circle at 100% 100%, color-mix(in srgb, var(--cor-destaque) 20%, transparent), transparent 55%);
+}
+
+h1,
+h2 {
+  font-family: var(--fonte-titulo);
+  letter-spacing: -0.02em;
 }
 
 /* ===== Barra de progresso ===== */
@@ -64,10 +86,25 @@ main {
   margin: auto 0;
 }
 
-.logo {
-  height: 40px;
-  width: auto;
+/* Cabeçalho da marca: logo + nome */
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   margin-bottom: 24px;
+}
+
+.logo {
+  height: 36px;
+  width: auto;
+}
+
+.marca-nome {
+  font-family: var(--fonte-titulo);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--cor-texto);
 }
 
 /* Cartão onde ficam as perguntas */
@@ -76,7 +113,7 @@ main {
   background: var(--cor-cartao);
   border-radius: 20px;
   box-shadow: 0 10px 30px rgba(11, 26, 58, 0.08);
-  padding: 32px 24px;
+  padding: 32px 20px;
   transition: opacity 0.25s ease, transform 0.25s ease;
 }
 
@@ -100,7 +137,7 @@ h1 {
 }
 
 h2 {
-  font-size: 1.5rem;
+  font-size: 1.45rem;
   line-height: 1.35;
   margin-bottom: 24px;
 }
@@ -108,7 +145,74 @@ h2 {
 .subtitulo {
   color: var(--cor-texto-secundario);
   font-size: 1.1rem;
+  margin-bottom: 20px;
+}
+
+/* Selos da abertura */
+.selos {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
   margin-bottom: 28px;
+}
+
+.selo {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--cor-principal);
+  background: var(--cor-selecionada-fundo);
+  border-radius: 999px;
+}
+
+.selo::before {
+  content: "✓";
+  font-weight: 700;
+}
+
+/* Tela final com ✓ animado */
+.final {
+  text-align: center;
+}
+
+.final h2 {
+  margin-bottom: 0;
+}
+
+.check {
+  display: block;
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 20px;
+}
+
+.check-circulo {
+  fill: none;
+  stroke: url(#check-gradiente);
+  stroke-width: 4;
+  stroke-dasharray: 214;
+  stroke-dashoffset: 214;
+  animation: desenhar 0.6s ease-out forwards;
+}
+
+.check-traco {
+  fill: none;
+  stroke: var(--cor-principal);
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-dasharray: 50;
+  stroke-dashoffset: 50;
+  animation: desenhar 0.4s ease-out 0.5s forwards;
+}
+
+@keyframes desenhar {
+  to {
+    stroke-dashoffset: 0;
+  }
 }
 
 /* ===== Campo ===== */

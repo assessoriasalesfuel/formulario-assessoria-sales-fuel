@@ -66,8 +66,11 @@ const PERGUNTAS = [
 
 // Textos da abertura e da tela final
 const TEXTOS = {
-  titulo: "Vamos conversar sobre o seu negócio",
-  subtitulo: "Leva cerca de 2 minutos.",
+  titulo: "Quer mais clientes chegando todos os dias?",
+  subtitulo:
+    "Responda algumas perguntas rápidas e descubra se podemos ajudar o seu negócio a vender mais com anúncios.",
+  selos: ["Leva 2 minutos", "Sem compromisso"],
+  botaoComecar: "Quero começar →",
   finalQualificado: "Tudo certo! Recebemos suas respostas e vamos entrar em contato pelo seu WhatsApp em breve.",
   finalNaoQualificado:
     "Obrigado pelas respostas! Pelo que você nos contou, este ainda não é o momento ideal para trabalharmos juntos.",
@@ -112,7 +115,8 @@ function mostrarAbertura() {
   mostrar(
     `<h1>${escapar(TEXTOS.titulo)}</h1>
      <p class="subtitulo">${escapar(TEXTOS.subtitulo)}</p>
-     <button class="botao" id="comecar">Começar</button>`,
+     <div class="selos">${TEXTOS.selos.map((s) => `<span class="selo">${escapar(s)}</span>`).join("")}</div>
+     <button class="botao" id="comecar">${escapar(TEXTOS.botaoComecar)}</button>`,
     () => {
       const botao = document.getElementById("comecar");
       botao.addEventListener("click", () => mostrarPergunta(0));
@@ -128,7 +132,7 @@ function mostrarPergunta(indice) {
   atualizarProgresso(indice / PERGUNTAS.length);
 
   const cabecalho = `
-    <p class="contador">${indice + 1} de ${PERGUNTAS.length}</p>
+    <p class="contador">Pergunta ${indice + 1} de ${PERGUNTAS.length}</p>
     <h2>${escapar(p.pergunta)}</h2>`;
   const voltar = `<button type="button" class="voltar" id="voltar">← Voltar</button>`;
 
@@ -168,7 +172,7 @@ function mostrarPergunta(indice) {
        <form id="form" novalidate>
          <div class="opcoes">${opcoes}</div>
          <p class="erro" id="erro"></p>
-         <button type="submit" class="botao">Continuar</button>
+         <button type="submit" class="botao">Continuar →</button>
        </form>
        ${voltar}`,
       () => {
@@ -222,7 +226,7 @@ function mostrarPergunta(indice) {
      <form id="form" novalidate>
        <input class="campo" id="campo" ${atributos}>
        <p class="erro" id="erro"></p>
-       <button type="submit" class="botao">Continuar</button>
+       <button type="submit" class="botao">Continuar →</button>
      </form>
      ${voltar}`,
     () => {
@@ -328,7 +332,21 @@ async function enviar() {
 
 function mostrarFinal(qualificado) {
   const texto = qualificado ? TEXTOS.finalQualificado : TEXTOS.finalNaoQualificado;
-  mostrar(`<h2>${escapar(texto)}</h2>`);
+  mostrar(
+    `<div class="final">
+       <svg class="check" viewBox="0 0 72 72" aria-hidden="true">
+         <defs>
+           <linearGradient id="check-gradiente" x1="0" y1="0" x2="1" y2="1">
+             <stop offset="0" stop-color="var(--cor-principal)" />
+             <stop offset="1" stop-color="var(--cor-destaque)" />
+           </linearGradient>
+         </defs>
+         <circle class="check-circulo" cx="36" cy="36" r="34" />
+         <path class="check-traco" d="M22 37 l9 9 l19 -20" />
+       </svg>
+       <h2>${escapar(texto)}</h2>
+     </div>`
+  );
 }
 
 function mostrarFalha() {
