@@ -67,7 +67,7 @@ const PERGUNTAS = [
 // Textos da abertura e da tela final
 const TEXTOS = {
   titulo: "Vamos conversar sobre o seu negócio",
-  subtitulo: "Leva menos de 1 minuto.",
+  subtitulo: "Leva cerca de 2 minutos.",
   finalQualificado: "Tudo certo! Recebemos suas respostas e vamos entrar em contato pelo seu WhatsApp em breve.",
   finalNaoQualificado:
     "Obrigado pelas respostas! Pelo que você nos contou, este ainda não é o momento ideal para trabalharmos juntos.",
