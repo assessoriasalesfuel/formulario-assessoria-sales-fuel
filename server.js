@@ -12,6 +12,12 @@ if (!BOLTEN_API_KEY || !BOLTEN_FUNIL_ID || !BOLTEN_CONTATOS_ID || !BOLTEN_ETAPA)
   process.exit(1);
 }
 
+// Coluna dos não qualificados. Se faltar, eles vão para BOLTEN_ETAPA (o formulário continua funcionando).
+const BOLTEN_ETAPA_DESQUALIFICADO = process.env.BOLTEN_ETAPA_DESQUALIFICADO || BOLTEN_ETAPA;
+if (!process.env.BOLTEN_ETAPA_DESQUALIFICADO) {
+  console.warn(`Aviso: BOLTEN_ETAPA_DESQUALIFICADO não definida. Não qualificados irão para "${BOLTEN_ETAPA}".`);
+}
+
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "public")));
 
@@ -63,10 +69,10 @@ async function comTentativas(descricao, funcao) {
 
 // Cria contato + oportunidade na Bolten e associa os dois.
 // O contato recebe Nome, Telefone e E-mail. A oportunidade entra na etapa
-// definida em BOLTEN_ETAPA, com a qualificação e todas as respostas na Observação.
+// recebida em "etapa", com a qualificação e todas as respostas na Observação.
 // Cada etapa tem suas próprias tentativas, então nada é criado em dobro.
 // "progresso" guarda o que já foi criado, para o aviso de erro.
-async function salvarNaBolten(respostas, observacao, progresso) {
+async function salvarNaBolten(respostas, observacao, etapa, progresso) {
   const contato = await comTentativas("criar o contato", () =>
     chamarBolten("POST", `/contact/api/v1/${BOLTEN_CONTATOS_ID}/contacts`, {
       attributes: { Nome: respostas["Nome"], Telefone: respostas["Telefone"], "E-mail": respostas["E-mail"] },
@@ -75,7 +81,7 @@ async function salvarNaBolten(respostas, observacao, progresso) {
   progresso.contato = contato.id;
   const oportunidade = await comTentativas("criar a oportunidade", () =>
     chamarBolten("POST", `/kanban/api/v1/${BOLTEN_FUNIL_ID}/opportunities`, {
-      attributes: { Status: BOLTEN_ETAPA, Observação: observacao },
+      attributes: { Status: etapa, Observação: observacao },
     })
   );
   progresso.oportunidade = oportunidade.id;
@@ -110,7 +116,8 @@ app.post("/api/lead", (req, res) => {
   res.json({ ok: true, qualificado });
 
   const progresso = {};
-  salvarNaBolten(respostas, observacao, progresso).catch(() => {
+  const etapa = qualificado ? BOLTEN_ETAPA : BOLTEN_ETAPA_DESQUALIFICADO;
+  salvarNaBolten(respostas, observacao, etapa, progresso).catch(() => {
     // Esgotou as tentativas: deixa tudo no terminal para cadastrar à mão
     const jaCriado = [
       progresso.contato && `contato ${progresso.contato}`,
