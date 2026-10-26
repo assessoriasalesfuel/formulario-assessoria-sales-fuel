@@ -148,6 +148,13 @@ h2 {
   margin-bottom: 20px;
 }
 
+/* Aviso abaixo do título nas perguntas de várias respostas */
+.aviso {
+  margin: -16px 0 20px;
+  font-size: 0.95rem;
+  color: var(--cor-texto-secundario);
+}
+
 /* Selos da abertura */
 .selos {
   display: flex;

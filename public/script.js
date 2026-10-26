@@ -74,6 +74,7 @@ const TEXTOS = {
   finalQualificado: "Tudo certo! Recebemos suas respostas e vamos entrar em contato pelo seu WhatsApp em breve.",
   finalNaoQualificado:
     "Obrigado pelas respostas! Pelo que você nos contou, este ainda não é o momento ideal para trabalharmos juntos.",
+  avisoMultipla: "Você pode marcar mais de uma opção.",
 };
 
 // =====================================================================
@@ -172,6 +173,7 @@ function mostrarPergunta(indice) {
 
     mostrar(
       `${cabecalho}
+       <p class="aviso">${escapar(TEXTOS.avisoMultipla)}</p>
        <form id="form" novalidate>
          <div class="opcoes">${opcoes}</div>
          <p class="erro" id="erro"></p>
